@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import { getServerSession } from "next-auth";
 import { Heart, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { HomeHeader } from "@/components/layout/home-header";
@@ -48,6 +49,7 @@ export default async function HomePage() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
+
               href={primaryHref}
               className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800"
             >
