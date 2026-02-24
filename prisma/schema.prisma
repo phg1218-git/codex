@@ -76,55 +76,58 @@ model User {
   id               String    @id @default(cuid())
   name             String?
   email            String?   @unique
+
+  emailVerified    DateTime?
   image            String?
   profileCompleted Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  profile          Profile?
-  surveyResponse   SurveyResponse?
-  threadsAsA       Thread[]  @relation("ParticipantA")
-  threadsAsB       Thread[]  @relation("ParticipantB")
-  messages         Message[]
+
+  accounts       Account[]
+  sessions       Session[]
+  profile        Profile?
+  surveyResponse SurveyResponse?
+  threadsAsA     Thread[]        @relation("ParticipantA")
+  threadsAsB     Thread[]        @relation("ParticipantB")
+  messages       Message[]
 }
 
 // Extended profile for matching.
 model Profile {
-  id                         String      @id @default(cuid())
-  userId                     String      @unique
-  dateOfBirth                DateTime
-  jobCategory                JobCategory
-  jobDetail                  String
-  companyProvince            String
-  companyDistrict            String
-  residenceProvince          String
-  residenceDistrict          String
-  hometownProvince           String
-  hometownDistrict           String
-  personality                String
-  hobbies                    String[]
-  preferences                String[]
-  mbti                       MBTI
-  bloodType                  BloodType
-  religion                   Religion
-  drinking                   Drinking
-  smoking                    Smoking
-  dislikedPartnerConditions  String[]
-  stopMatching               Boolean     @default(false)
-  createdAt                  DateTime    @default(now())
-  updatedAt                  DateTime    @updatedAt
-
+  id                        String      @id @default(cuid())
+  userId                    String      @unique
+  dateOfBirth               DateTime
+  jobCategory               JobCategory
+  jobDetail                 String
+  companyProvince           String
+  companyDistrict           String
+  residenceProvince         String
+  residenceDistrict         String
+  hometownProvince          String
+  hometownDistrict          String
+  personality               String
+  hobbies                   String[]
+  preferences               String[]
+  mbti                      MBTI
+  bloodType                 BloodType
+  religion                  Religion
+  drinking                  Drinking
+  smoking                   Smoking
+  dislikedPartnerConditions String[]
+  stopMatching              Boolean     @default(false)
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Survey response persisted as normalized records.
 model SurveyResponse {
-  id        String       @id @default(cuid())
-  userId    String       @unique
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   answers   SurveyAnswer[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -132,7 +135,7 @@ model SurveyResponse {
 
 // Question IDs must remain immutable; answer payload stored as json.
 model SurveyAnswer {
-  id               String         @id @default(cuid())
+  id               String @id @default(cuid())
   surveyResponseId String
   questionId       String
   answer           Json
@@ -144,11 +147,11 @@ model SurveyAnswer {
 
 // Anonymous chat thread between two users.
 model Thread {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   participantAId String
   participantBId String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   participantA User      @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
   participantB User      @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)

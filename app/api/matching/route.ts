@@ -20,7 +20,7 @@ export async function GET() {
     where: {
       userId: { not: session.user.id },
       stopMatching: false,
-      dislikedPartnerConditions: { hasNone: me.dislikedPartnerConditions }
+      NOT: { dislikedPartnerConditions: { hasSome: me.dislikedPartnerConditions } }
     },
     take: 30
   });
