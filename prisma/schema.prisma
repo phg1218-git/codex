@@ -1,0 +1,209 @@
+// Prisma schema for 이어줌 (Connecting)
+// This schema is optimized for Neon PostgreSQL free tier constraints.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Supported enum for Korean job categories.
+enum JobCategory {
+  IT
+  FINANCE
+  HEALTHCARE
+  EDUCATION
+  PUBLIC
+  SERVICE
+  SALES
+  DESIGN
+  OTHER
+}
+
+enum MBTI {
+  ISTJ
+  ISFJ
+  INFJ
+  INTJ
+  ISTP
+  ISFP
+  INFP
+  INTP
+  ESTP
+  ESFP
+  ENFP
+  ENTP
+  ESTJ
+  ESFJ
+  ENFJ
+  ENTJ
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+  UNKNOWN
+}
+
+enum Religion {
+  NONE
+  CHRISTIAN
+  CATHOLIC
+  BUDDHIST
+  WON_BUDDHISM
+  OTHER
+}
+
+enum Drinking {
+  NEVER
+  SOMETIMES
+  OFTEN
+}
+
+enum Smoking {
+  NONE
+  OCCASIONAL
+  DAILY
+}
+
+// User stores identity information from OAuth.
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String?   @unique
+  image            String?
+  profileCompleted Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  profile          Profile?
+  surveyResponse   SurveyResponse?
+  threadsAsA       Thread[]  @relation("ParticipantA")
+  threadsAsB       Thread[]  @relation("ParticipantB")
+  messages         Message[]
+}
+
+// Extended profile for matching.
+model Profile {
+  id                         String      @id @default(cuid())
+  userId                     String      @unique
+  dateOfBirth                DateTime
+  jobCategory                JobCategory
+  jobDetail                  String
+  companyProvince            String
+  companyDistrict            String
+  residenceProvince          String
+  residenceDistrict          String
+  hometownProvince           String
+  hometownDistrict           String
+  personality                String
+  hobbies                    String[]
+  preferences                String[]
+  mbti                       MBTI
+  bloodType                  BloodType
+  religion                   Religion
+  drinking                   Drinking
+  smoking                    Smoking
+  dislikedPartnerConditions  String[]
+  stopMatching               Boolean     @default(false)
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Survey response persisted as normalized records.
+model SurveyResponse {
+  id        String       @id @default(cuid())
+  userId    String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  answers   SurveyAnswer[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Question IDs must remain immutable; answer payload stored as json.
+model SurveyAnswer {
+  id               String         @id @default(cuid())
+  surveyResponseId String
+  questionId       String
+  answer           Json
+
+  surveyResponse SurveyResponse @relation(fields: [surveyResponseId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyResponseId, questionId])
+}
+
+// Anonymous chat thread between two users.
+model Thread {
+  id             String    @id @default(cuid())
+  participantAId String
+  participantBId String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  participantA User      @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB User      @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
+  messages     Message[]
+
+  @@unique([participantAId, participantBId])
+}
+
+// Message supports polling client strategy.
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+// NextAuth required tables.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
