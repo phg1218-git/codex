@@ -10,7 +10,6 @@ const config: Config = {
           100: "#ffe4ec",
           500: "#ec4899",
           700: "#be185d"
-
         },
         blush: {
           50: "#fff8fa",
